@@ -1,0 +1,110 @@
+
+/* Outer block */
+.sw-tabs {
+  margin: 32px 0 48px;
+}
+
+/* Tab navigation */
+.sw-tabs .tabs-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* Individual tab button */
+.sw-tabs .tabs-button {
+  flex-shrink: 0;
+  padding: 14px 22px;
+  margin-bottom: -2px;
+  border: 1px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  color: #64748b;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+/* Hover state */
+.sw-tabs .tabs-button:hover {
+  color: #4338ca;
+  background: #f1f5ff;
+}
+
+/* Selected tab */
+.sw-tabs .tabs-button[aria-selected='true'] {
+  color: #3730a3;
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  border-bottom-color: #eef2ff;
+}
+
+/* Keyboard focus */
+.sw-tabs .tabs-button:focus-visible {
+  outline: 3px solid #818cf8;
+  outline-offset: -4px;
+}
+
+/* Content area */
+.sw-tabs .tabs-panel {
+  padding: 24px;
+  border: 1px solid #c7d2fe;
+  border-top: 3px solid #6366f1;
+  border-radius: 0 0 10px 10px;
+  color: #334155;
+  font-size: 16px;
+  line-height: 1.75;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgb(79 70 229 / 6%);
+}
+
+/* Hide inactive panels */
+.sw-tabs .tabs-panel[hidden] {
+  display: none;
+}
+
+/* Content headings */
+.sw-tabs .tabs-panel h2,
+.sw-tabs .tabs-panel h3 {
+  margin-top: 0;
+  color: #1e1b4b;
+}
+
+/* Paragraph spacing */
+.sw-tabs .tabs-panel p:last-child {
+  margin-bottom: 0;
+}
+
+/* Links inside content */
+.sw-tabs .tabs-panel a {
+  color: #4338ca;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Mobile layout */
+@media (max-width: 600px) {
+  .sw-tabs .tabs-button {
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+
+  .sw-tabs .tabs-panel {
+    padding: 20px 16px;
+    font-size: 15px;
+  }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .sw-tabs .tabs-button {
+    transition: none;
+  }
+}

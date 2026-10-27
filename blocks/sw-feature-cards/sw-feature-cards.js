@@ -3,6 +3,8 @@ export default function decorate(block) {
   // Read the rows provided by the document.
   const rows = [...block.children];
 
+  console.log(block);
+
   // Create a container for the cards.
   const grid = document.createElement('div');
   grid.className = 'feature-cards-grid';
@@ -20,7 +22,7 @@ export default function decorate(block) {
     const card = document.createElement('article');
     card.className = 'feature-cards-card';
 
-    const title = document.createElement('h3');
+    const title = document.createElement('h2');
     title.textContent = titleText;
 
     const description = document.createElement('p');
