@@ -1,0 +1,182 @@
+/* FAQ section */
+.sw-faq-accordion {
+  margin: 32px 0 48px;
+}
+
+/* List of FAQ items */
+.sw-faq-accordion .faq-accordion-list {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+/* Individual FAQ card */
+.sw-faq-accordion .faq-accordion-item {
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgb(15 23 42 / 4%);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.sw-faq-accordion .faq-accordion-item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 5px 16px rgb(15 23 42 / 8%);
+}
+
+/* Question button */
+.sw-faq-accordion .faq-accordion-question {
+  display: flex;
+  width: 100%;
+  min-height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 24px;
+  border: 0;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+  transition: background 180ms ease;
+}
+
+.sw-faq-accordion .faq-accordion-question:hover {
+  background: #f8fafc;
+}
+
+/* Plus/minus icon */
+.sw-faq-accordion .faq-accordion-question::after {
+  content: '+';
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 23px;
+  font-weight: 400;
+  line-height: 1;
+  transition:
+    transform 180ms ease,
+    background 180ms ease;
+}
+
+.sw-faq-accordion .faq-accordion-question[aria-expanded='true']::after {
+  content: '−';
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+/* Expanded question */
+.sw-faq-accordion .faq-accordion-question[aria-expanded='true'] {
+  background: #f8faff;
+}
+
+/* Animated answer panel */
+.sw-faq-accordion .faq-accordion-answer {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  padding: 0 24px;
+  color: #475569;
+  font-size: 16px;
+  line-height: 1.75;
+  transition:
+    max-height 300ms ease,
+    opacity 220ms ease,
+    padding 300ms ease;
+}
+
+/* Add vertical spacing only while the answer is open */
+.sw-faq-accordion .faq-accordion-question[aria-expanded='true']+.faq-accordion-answer {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+/* Keep hidden answers out of the layout */
+.sw-faq-accordion .faq-accordion-answer[hidden] {
+  display: none;
+}
+
+.sw-faq-accordion .faq-accordion-answer-content {
+  padding-bottom: 0;
+}
+
+/* Keep hidden answers out of layout */
+.sw-faq-accordion .faq-accordion-answer[hidden] {
+  display: none;
+}
+
+/* Answer typography */
+.sw-faq-accordion .faq-accordion-answer p {
+  margin: 0 0 12px;
+}
+
+.sw-faq-accordion .faq-accordion-answer p:last-child {
+  margin-bottom: 0;
+}
+
+.sw-faq-accordion .faq-accordion-answer a {
+  color: #3730a3;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Keyboard accessibility */
+.sw-faq-accordion .faq-accordion-question:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 3px solid #6366f1;
+  outline-offset: -4px;
+}
+
+/* Mobile layout */
+@media (max-width: 600px) {
+  .sw-faq-accordion .faq-accordion-list {
+    gap: 10px;
+  }
+
+  .sw-faq-accordion .faq-accordion-question {
+    min-height: 58px;
+    padding: 16px;
+    font-size: 16px;
+    gap: 12px;
+  }
+
+  .sw-faq-accordion .faq-accordion-question::after {
+    width: 28px;
+    height: 28px;
+    font-size: 21px;
+  }
+
+  .sw-faq-accordion .faq-accordion-answer {
+    padding-right: 16px;
+    padding-left: 16px;
+    font-size: 15px;
+  }
+
+  .sw-faq-accordion .faq-accordion-answer-content {
+    padding-bottom: 18px;
+  }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+
+  .sw-faq-accordion .faq-accordion-item,
+  .sw-faq-accordion .faq-accordion-question,
+  .sw-faq-accordion .faq-accordion-question::after,
+  .sw-faq-accordion .faq-accordion-answer {
+    transition: none;
+  }
+}
