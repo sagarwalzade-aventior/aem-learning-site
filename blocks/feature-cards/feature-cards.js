@@ -20,7 +20,7 @@ export default function decorate(block) {
     const card = document.createElement('article');
     card.className = 'feature-cards-card';
 
-    const title = document.createElement('h3');
+    const title = document.createElement('h2');
     title.textContent = titleText;
 
     const description = document.createElement('p');

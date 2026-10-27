@@ -14,9 +14,9 @@
   box-shadow: 0 4px 12px rgb(0 0 0 / 5%);
 }
 
-.feature-cards .feature-cards-card h3 {
-  margin: 0 0 12px;
-  font-size: 1.25rem;
+.feature-cards .feature-cards-card h2 {
+  margin: 0 0 16px;
+  font-size: 24px;
 }
 
 .feature-cards .feature-cards-card p {
