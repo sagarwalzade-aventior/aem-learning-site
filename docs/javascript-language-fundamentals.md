@@ -37,12 +37,16 @@ The guide follows your topic groups. Mark a group complete when you feel comfort
   - [14. `if`, `switch`, and early return](#14-if-switch-and-early-return)
   - [15. Error handling: `try`, `catch`, and `throw`](#15-error-handling-try-catch-and-throw)
   - [16. Project patterns: arrays, DOM, and safe rendering](#16-project-patterns-arrays-dom-and-safe-rendering)
+    - [Closures and nested functions](#closures-and-nested-functions)
+    - [`for...of`](#forof)
+    - [Classes and `new`](#classes-and-new)
 - [Group 2 — Arrays, Objects and Strings](#group-2--arrays-objects-and-strings)
   - [17.1 Array methods](#171-array-methods)
   - [17.2 DOM collections: `Array.from()` and spread](#172-dom-collections-arrayfrom-and-spread)
   - [17.3 Object methods](#173-object-methods)
   - [17.4 `Map` and `Set`](#174-map-and-set)
   - [17.5 String methods](#175-string-methods)
+    - [`toUpperCase()`](#touppercase)
   - [17.6 Regular expressions: `RegExp`](#176-regular-expressions-regexp)
   - [17.7 Number conversion](#177-number-conversion)
   - [17.8 `Math`](#178-math)
@@ -66,6 +70,7 @@ The guide follows your topic groups. Mark a group complete when you feel comfort
   - [19.5 History API and URL state](#195-history-api-and-url-state)
   - [19.6 Scrolling and geometry](#196-scrolling-and-geometry)
   - [19.7 Timers and animation frames](#197-timers-and-animation-frames)
+    - [Debounce and throttle](#debounce-and-throttle-patterns)
   - [19.8 Responsive behavior: `matchMedia()`](#198-responsive-behavior-matchmedia)
 - [Group 5 — Asynchronous JavaScript and Data Loading](#group-5--asynchronous-javascript-and-data-loading)
   - [20.1 `Promise`](#201-promise)
@@ -95,6 +100,7 @@ The guide follows your topic groups. Mark a group complete when you feel comfort
   - [22.10 Commerce helpers](#commerce-helpers--scriptscommercejs)
   - [22.11 Authentication helpers](#authentication-helpers--scriptslogindropdownhelpersjs)
   - [22.12 How to learn a project helper](#how-to-learn-a-project-helper)
+  - [Sony commerce session, `form_key`, and Luma Bridge](#sony-commerce-session-form_key-and-luma-bridge)
 - [Group 8 — EDS Design Patterns](#group-8--eds-design-patterns)
   - [23.1 Decorate pattern](#decorate-pattern--authored-html-is-the-input)
   - [23.2 Config-from-table pattern](#config-from-table-pattern--readblockconfig)
@@ -464,7 +470,9 @@ Default parameters are evaluated when the function is called. Use `??` inside th
 
 ### 13. Asynchronous JavaScript: promises, `async`, and `await`
 
-Many project operations take time: network requests (`fetch`), loading configuration, and loading page data. JavaScript represents a future result with a **promise**. An `async` function always returns a promise. Inside it, `await` pauses that function until a promise settles, while the browser can keep doing other work.
+This is a short introduction to asynchronous code. The detailed treatment of promises, `async`/`await`, parallel work, network requests, and errors is in [Group 5 — Asynchronous JavaScript and Data Loading](#group-5--asynchronous-javascript-and-data-loading). This bridge helps you recognize the syntax while learning the core language.
+
+A **promise** represents a value that may arrive later. An `async` function always returns a promise. `await` pauses that function until the promise settles, while the browser can continue other work.
 
 ```js
 async function loadPageData(url) {
@@ -478,40 +486,7 @@ async function loadPageData(url) {
 const data = await loadPageData('/data.json');
 ```
 
-Calling an async function without `await` does not give you its final value; it gives you a promise. Await it, return it, or attach `.then()`/`.catch()` handlers.
-
-### Run independent work together
-
-If two requests do not depend on each other, `Promise.all` starts/waits for both concurrently:
-
-```js
-const [profile, addresses] = await Promise.all([
-  loadProfile(),
-  loadAddresses(),
-]);
-```
-
-`Promise.all` rejects as soon as one input rejects. Use `Promise.allSettled` when each operation should finish and report its own result even if a different operation fails:
-
-```js
-const results = await Promise.allSettled([loadProfile(), loadRecommendations()]);
-const profileResult = results[0];
-if (profileResult.status === 'fulfilled') {
-  renderProfile(profileResult.value);
-}
-```
-
-**Tricky:** this does not wait for the request, so the `try` block cannot catch its rejection:
-
-```js
-try {
-  fetch('/data.json'); // missing await or return
-} catch (error) {
-  // will not catch a later network rejection
-}
-```
-
-Use `await fetch(...)` inside `try`, or `return fetch(...).catch(...)`. Also, `fetch` typically rejects for network failures, but an HTTP 404/500 still fulfills with a `Response`; check `response.ok` yourself. Avoid awaiting independent requests one after another, as that adds unnecessary delay.
+Calling an async function without `await` gives you a promise, not the final value. Await it, return it, or attach `.then()`/`.catch()` handlers. `Promise.all` combines independent promises; Group 5 explains when to use it and what happens if one rejects.
 
 ---
 
@@ -647,6 +622,63 @@ block.append(heading);
 ```
 
 This avoids treating a title such as `<img src=x onerror=...>` as executable markup. Be deliberate with `.innerHTML`, particularly when a string contains content from a page author, API, query parameter, or user.
+
+### Closures and nested functions
+
+A closure is a function together with access to variables from the surrounding scope where that function was created. A nested event handler can keep using the outer function's local state after the outer function has returned. This is how a block can create per-instance state without putting every value on `window`.
+
+```js
+function createCounter(button, output) {
+  let count = 0;
+
+  button.addEventListener('click', () => {
+    count += 1; // this callback closes over this invocation's count
+    output.textContent = String(count);
+  });
+}
+```
+
+Each call to `createCounter` creates a separate `count`. In `blocks/tabs/tabs.js`, handlers and helper functions close over state such as `sections`, `sectionMap`, `ignoreObserver`, and `dropdown`. That lets the event callbacks coordinate the state for that particular tabs block.
+
+**Tricky:** closures keep references alive. A long-lived listener attached to `window` or `document` can keep the block and its captured values reachable; remove the listener when its owner is disposed. A closure captures access to a variable, not a frozen copy of its value, so a callback may observe later updates to that variable.
+
+### `for...of`
+
+`for...of` iterates values from an iterable such as an array, string, `Map`, `Set`, or `NodeList`. It is useful when you need `break`, `continue`, or sequential `await`—things `forEach` does not provide.
+
+```js
+for (const block of blocks) {
+  if (!block.isConnected) continue;
+  await loadBlock(block); // waits before moving to the next block
+}
+```
+
+For parallel independent work, use `Promise.all(items.map(...))` instead. For plain synchronous transformations, array methods such as `map` and `filter` are often clearer.
+
+**Tricky:** `for...of` iterates values; `for...in` iterates enumerable property keys and is usually not the right way to traverse an array. A `for...of` loop over a promise does not automatically await each item unless the loop body uses `await` inside an async function.
+
+### Classes and `new`
+
+JavaScript's `class` syntax defines a constructor for creating objects with shared methods. `new` creates an instance and calls its constructor. Many built-in APIs are also constructors and use `new`, even though your own project code may mostly use functions and objects.
+
+```js
+class TabsController {
+  constructor(root) {
+    this.root = root;
+  }
+
+  activate() {
+    this.root.classList.add('is-active');
+  }
+}
+
+const controller = new TabsController(block);
+controller.activate();
+```
+
+Project examples of built-in constructors include `new URL(...)`, `new Map()`, `new Set()`, `new Date()`, `new FormData(form)`, `new IntersectionObserver(callback)`, and `new MutationObserver(callback)`. These create instances with API methods and state.
+
+**Tricky:** do not call a class without `new`; JavaScript throws. Regular functions and arrow functions are not interchangeable with classes as constructors, and arrow functions cannot be called with `new`. In class methods, `this` depends on how the method is called; passing `controller.activate` as a callback can lose its receiver unless you bind it or use a closure.
 
 ---
 
@@ -990,6 +1022,16 @@ const normalized = heading.textContent.trim().toLowerCase();
 ```
 
 It does not alter the original. For locale-specific human language comparisons, use `toLocaleLowerCase(locale)` because casing rules can vary by language.
+
+#### `toUpperCase()`
+
+Returns a new uppercase string, commonly used in this project to normalize country and currency codes:
+
+```js
+const countryCode = rawCountryCode.trim().toUpperCase();
+```
+
+Like `toLowerCase`, it does not alter the original string. For locale-specific text, consider `toLocaleUpperCase(locale)`; for machine identifiers such as `US` or `EUR`, explicit case normalization is usually appropriate.
 
 #### String `includes()`
 
@@ -1818,6 +1860,29 @@ The callback receives a high-resolution timestamp. Save the returned ID and use 
 
 **Tricky:** one animation frame is not the same as “after every CSS transition has completed.” Listen for `transitionend` (with appropriate handling) if you need the transition completion event. Two nested animation frames are sometimes used to ensure the browser paints an intermediate state, but prefer a clear transition/event-based design when possible.
 
+#### Debounce and throttle patterns
+
+Debounce and throttle are timing patterns often used around frequent events such as `input`, `scroll`, and `resize`.
+
+- **Debounce** waits until events have stopped for a chosen interval, then runs once. Useful for search input so a request is made after typing pauses.
+- **Throttle** runs at most once per chosen interval while events continue. Useful for limiting scroll/resize work.
+
+Debounce with a timer:
+
+```js
+function debounce(callback, delay) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => callback(...args), delay);
+  };
+}
+
+input.addEventListener('input', debounce(() => search(input.value), 250));
+```
+
+**Tricky:** debounce delays execution and may never run if events keep arriving; throttle guarantees periodic work while events continue (depending on the implementation). Cancel pending timers during cleanup if the owning UI is removed. Use `requestAnimationFrame` for paint-aligned visual updates, not as a drop-in substitute for every debounce/throttle use.
+
 ### 19.8 Responsive behavior: `matchMedia()`
 
 `window.matchMedia(query)` evaluates a CSS media query and returns a `MediaQueryList` with a `matches` boolean. Listen for changes when behavior should adapt as the viewport or user preference changes.
@@ -2234,7 +2299,7 @@ function cleanup() {
 
 ## Group 7 — EDS Helpers and APIs
 
-This group explains the shared helpers that turn authored EDS content into configured and decorated blocks, load fragments and indexes, and connect the frontend to Sony Biotech's Magento commerce and authentication state. The examples and behavior below are based on this repository's implementations in `scripts/aem.js`, `scripts/scripts.js`, `blocks/fragment/fragment.js`, `scripts/commerce.js`, and `scripts/loginDropdown/helpers.js`.
+This group explains shared EDS helpers that turn authored content into configured and decorated blocks, load fragments and indexes, and connect the frontend to commerce/authentication state. The `scripts/aem.js` and fragment examples describe EDS patterns. The `scripts/commerce.js`, `scripts/loginDropdown/helpers.js`, Magento `form_key`, and Luma Bridge examples are specific to the Sony Biotech project; another learning site may have only the general EDS helpers and fragment code, or may implement commerce/auth differently.
 
 ### 22. EDS helpers and APIs in this project
 
@@ -2457,6 +2522,31 @@ if (result?.errors) {
 **Tricky:** `GET` and `USE_TOKEN` are positional booleans (or a token string for `USE_TOKEN`), so arguments are easy to misorder. A non-OK response becomes `null`, while network and JSON parsing errors can reject. HTTP success does not guarantee GraphQL success; inspect the returned `errors` field. Never log or expose bearer tokens/API keys, and use the shared helper so store and customer-group headers stay consistent.
 
 Other commerce exports include `fetchCustomerGroup()`/`getCustomerGroup()`, wishlist functions, `getProducts()`, `getCategory()`, `getCategoryFromPath()`, `getSkuFromUrl()`, and canonical/product path helpers. Before implementing commerce logic, check whether one of these already expresses the needed project behavior.
+
+#### Sony commerce session, `form_key`, and Luma Bridge
+
+Some Sony blocks submit requests to Magento controllers in addition to using GraphQL. These requests need the browser's Magento session cookie, and state-changing controller requests commonly include Magento's CSRF form key.
+
+In `blocks/commerce-wishlist/commerce-wishlist.js`, `getFormKey()` reads the `form_key` cookie, `postToMagento()` adds that value to a `URLSearchParams` body, and `fetch` uses `credentials: 'include'` so matching cookies are sent with the request. `blocks/commerce-address/commerce-address.js` follows a similar pattern.
+
+```js
+const body = new URLSearchParams();
+body.append('form_key', getFormKey());
+
+const response = await fetch(controllerUrl, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'X-Requested-With': 'XMLHttpRequest',
+  },
+  body: body.toString(),
+  credentials: 'include',
+});
+```
+
+The login flow also coordinates the EDS-side customer token with Magento's PHP session through the Luma Bridge connector. `scripts/loginDropdown/api.js` obtains a customer token, calls `lumaBridgeLogin`, fetches customer/cart data, and persists selected UI state. `scripts/lumaBridgeEvents.js` initializes the Magento session during page startup.
+
+**Tricky:** `credentials: 'include'` asks the browser to include credentials for the request; cross-origin requests still require a compatible server CORS policy and cookie settings. A `form_key` is a CSRF token, not an authentication token; do not hardcode or log it. The browser may restrict JavaScript access to some cookies, and `HttpOnly` cookies are intentionally unreadable from `document.cookie`. A locally stored customer token and a Magento session cookie are distinct pieces of state; use the existing login/logout/session helpers rather than assuming one automatically updates the other. These details apply to this Sony integration, not to every EDS or Magento site.
 
 ### Authentication helpers — `scripts/loginDropdown/helpers.js`
 
@@ -2682,7 +2772,7 @@ This is a teaching sketch: a real block should define loading and error states t
 
 ## Group 9 — Review and Apply in the Real Project
 
-This group turns the earlier notes into active practice. The goal is to read real code, find familiar language/API patterns, and explain the whole path from authored content to the behavior a visitor sees. Leave these boxes unchecked until you have completed the exercise and can explain the result in your own words.
+This group turns the earlier notes into active practice against the Sony Biotech repository used for this guide. Its paths (`blocks/commerce-checkout`, `scripts/commerce.js`, and others) may not exist in a separate EDS learning site. The goal is to read the code that is actually present, find familiar language/API patterns, and explain the whole path from authored content to the behavior a visitor sees. Leave these boxes unchecked until you have completed the exercise and can explain the result in your own words.
 
 ### 24. Project study exercises
 
@@ -2743,6 +2833,18 @@ Use repository search or editor “Find in Files”. For each item, write one pa
 **Useful searches:** `rg "readBlockConfig|createOptimizedPicture" blocks scripts`, `rg "IntersectionObserver|MutationObserver|ResizeObserver" blocks scripts --glob '*.js'`, and `rg "addEventListener|history\\.(pushState|replaceState)" blocks scripts --glob '*.js'`.
 
 When a topic does not appear in authored source, note that clearly rather than forcing an example. Libraries and generated/minified bundles may contain APIs that project code does not directly use.
+
+#### What to skip for now
+
+Keep the study focused on JavaScript and EDS patterns that help you read and change these blocks. You do not need to study these as separate subjects yet:
+
+- React or another UI framework, unless a specific widget's source requires it.
+- TypeScript; the project block examples here are JavaScript.
+- Node.js server development; browser JavaScript is the current focus.
+- Magento PHP internals; learn the frontend request/session contract first, then follow into backend code only when a task requires it.
+- Advanced structures and control flow such as `WeakMap`, generators, and iterators beyond everyday `for...of` use.
+
+“Skip for now” does not mean “never learn”: follow one of these topics if a real task depends on it, but do not let it distract from the current group checklist.
 
 #### 9.6 Practice explaining a block from start to finish
 
